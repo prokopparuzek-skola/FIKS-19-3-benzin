@@ -3,6 +3,12 @@ package main
 import "fmt"
 import "math"
 
+const (
+	UNEXPLORED = iota
+	OPEN
+	CLOSE
+)
+
 type Blot struct {
 	x int
 	y int
@@ -37,6 +43,64 @@ func findRoute(in Map) bool {
 			}
 		}
 	}
+	for i := range in.lblots {
+		var stackA, stackF []int
+		var graph []int
+		stackA = make([]int, 0)
+		stackF = make([]int, 0)
+		graph = make([]int, len(in.blots))
+		stackA = append(stackA, i)
+		graph[i] = OPEN
+		for {
+			for _, v := range stackA {
+				for _, n := range neighs[v] {
+					if graph[n] == UNEXPLORED {
+						if in.dblots[n] || in.rblots[n] {
+							return false
+						} else {
+							graph[n] = OPEN
+							stackF = append(stackF, n)
+						}
+					}
+				}
+				graph[v] = CLOSE
+			}
+			if len(stackF) == 0 {
+				break
+			}
+			stackA = stackF
+			stackF = make([]int, 0)
+		}
+	}
+	for i := range in.ublots {
+		var stackA, stackF []int
+		var graph []int
+		stackA = make([]int, 0)
+		stackF = make([]int, 0)
+		graph = make([]int, len(in.blots))
+		stackA = append(stackA, i)
+		graph[i] = OPEN
+		for {
+			for _, v := range stackA {
+				for _, n := range neighs[v] {
+					if graph[n] == UNEXPLORED {
+						if in.dblots[n] || in.rblots[n] {
+							return false
+						} else {
+							graph[n] = OPEN
+							stackF = append(stackF, n)
+						}
+					}
+				}
+				graph[v] = CLOSE
+			}
+			if len(stackF) == 0 {
+				break
+			}
+			stackA = stackF
+			stackF = make([]int, 0)
+		}
+	}
 	return true
 }
 
@@ -63,7 +127,6 @@ func main() {
 			up := (in.blots[j].y + in.blots[j].r) >= in.Y
 			down := (in.blots[j].y - in.blots[j].r) <= 0
 			if (left && down) || (right && up) {
-				fmt.Println("Nelze projet")
 				can = false
 			} else if left {
 				in.lblots[j] = true
@@ -77,8 +140,13 @@ func main() {
 
 		}
 		if can {
-			findRoute(in)
+			if findRoute(in) {
+				fmt.Println("Lze projet")
+			} else {
+				fmt.Println("Neexistuje trasa")
+			}
 		} else {
+			fmt.Println("Neexistuje trasa")
 			continue
 		}
 	}
